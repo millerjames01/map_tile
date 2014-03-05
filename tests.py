@@ -4,15 +4,19 @@ import utils
 class UtilTest(unittest.TestCase):
 
     def test_bounding_box_from_latlng(self):
+        return True
         # utils.bounding_box(point, half-side) gives the proper coordinates
 
     def test_bounding_box_to_tiles(self):
+        return True
         # utils.bouding_box_to_tiles(nw, se, zoom):
 
     def test_bounding_box_to_tile_nums(self):
+        return True
         # utils.bounding_box_to_tile_nums(nw, se, zoom)
 
     def test_bound_pyramid_to_tile_nums(self):
+        return True
         # utils.bound_pyramid_to_tile_nums(nw, se, zmin, zmax)
 
 """
