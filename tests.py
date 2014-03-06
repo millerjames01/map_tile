@@ -13,8 +13,6 @@ class UtilTest(unittest.TestCase):
       # https://www.wolframalpha.com/input/?i=++++++distance+from+%2841.312604%2C+-72.929916%29+to+%2841.31170467839408%2C+-72.93111330920529%29&a=*C.distance-_*GeoQueryType-
       self.southwest100 = (41.31170467839408, -72.93111330920529)
 
-
-
     def test_bounding_box_from_latlng_when_padding_is_zero(self):
         ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 0 )
         self.assertEqual(ret[0], self.point)
@@ -25,15 +23,9 @@ class UtilTest(unittest.TestCase):
         self.assertEqual(ret[0], self.northeast100)
         self.assertEqual(ret[1], self.southwest100)
 
-        # utils.bounding_box(point, half-side) gives the proper coordinates
-
     def test_bounding_box_to_tiles(self):
         return True
         # utils.bouding_box_to_tiles(nw, se, zoom):
-
-    def test_bounding_box_to_tile_nums(self):
-        return True
-        # utils.bounding_box_to_tile_nums(nw, se, zoom)
 
     def test_bound_pyramid_to_tile_nums(self):
         return True
