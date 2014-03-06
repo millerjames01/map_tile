@@ -2,6 +2,8 @@ import math
 import os
 
 import settings
+import sqlite3
+import urllib2
 
 # @param lat <Float>
 # @param lng <Float>
@@ -60,6 +62,31 @@ def bound_pyramid_to_tile_nums(ne, sw, zmin, zmax):
         tile_nums += bounding_box_to_tile_nums(ne, sw, z)
     return tile_nums
 
+def tile_nums_to_sqlite3_db(tile_nums, fn="out.mbtiles"):
+    # clobber file first
+    if os.path.isfile(fn):
+        os.remove(fn)
+    conn = sqlite3.connect(fn)
+
+    conn.execute(
+        '''
+        CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);
+        '''
+        )
+
+    for tile_num in tile_nums:
+        url =  num2url(*tile_num)
+        tile_data = urllib2.urlopen(url).read()
+        conn.execute(
+            "INSERT INTO tiles VALUES (%d, %d, %d, ?)" % (tile_num[2], tile_num[0], tile_num[1]),
+            [sqlite3.Binary(tile_data)]
+            )
+
+    conn.commit()
+    conn.close()
+
+
+
 # @param coord <LatLng tuple>
 # @param zoom <Integer> the desired zoom level for the tile to return
 # @return <tile number tuple: (x, y, zoom)>
@@ -95,23 +122,6 @@ def download_tiles(urls, target_dir='/tmp/tiles'):
 
     #cleanup
     #os.remove(fn)
-
-def pyramid4deg(lat_deg, lon_deg, zoom_limit=15, radius=2):
-    """
-    Given a lat/lng, generate the urls for the pyramid of tiles
-    for zoom levels 3-17
-
-    Radius is how many tiles from the center at zoom-limit and above
-    (by default zooms 3-15 have radius of 2.  16 has radius 4.  17 radius 8)
-    """
-    urls = []
-    for zoom in range(3, 18):
-        ctr_x, ctr_y = deg2num(lat_deg, lon_deg, zoom)
-        r = radius * (2 ** (max(zoom, zoom_limit) - zoom_limit))
-        for x in range(ctr_x-r, ctr_x+r+1):
-            for y in range(ctr_y-r, ctr_y+r+1):
-                urls.append(num2url(zoom, x, y))
-    return urls
 
 def num2url(x, y, zoom):
     """

@@ -1,6 +1,8 @@
 import unittest
 import utils
 import settings
+import sqlite3
+import os
 
 class UtilTest(unittest.TestCase):
 
@@ -89,41 +91,30 @@ class UtilTest(unittest.TestCase):
           'http://api.tiles.mapbox.com/v3/%s/5/6371/6759.png' % settings.MAP_ID
         )
 
-"""
-    def test_pyramid4deg(self):
-        urls = utils.pyramid4deg(38, -85)
-        expected_first_30 = ['http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/0/1.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/0/2.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/0/3.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/0/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/0/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/1/1.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/1/2.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/1/3.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/1/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/1/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/2/1.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/2/2.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/2/3.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/2/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/2/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/3/1.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/3/2.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/3/3.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/3/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/3/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/4/1.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/4/2.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/4/3.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/4/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/3/4/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/4/2/4.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/4/2/5.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/4/2/6.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/4/2/7.png',
- 'http://api.tiles.mapbox.com/v3/silviaterra.map-wgl5nho7/4/2/8.png']
-        self.assertEquals(urls[:30], expected_first_30)
-"""
+    def test_sqlite3(self):
+        tile_nums = [(2, 2, 3),
+            (4, 5, 4),
+            (9, 11, 5)]
+
+        # TODO(syu): replace with random temp file naem
+        fn = "test.mbtiles"
+
+        utils.tile_nums_to_sqlite3_db(tile_nums, fn)
+
+        conn = sqlite3.connect(fn)
+        cursor = conn.cursor()
+        for tile_num in tile_nums[:]:
+            cursor.execute("SELECT * from tiles WHERE tile_column = %d AND tile_row = %d AND zoom_level = %d" % tile_num)
+            tile_data = cursor.fetchone()[3]
+
+            on_disk = open("test/%d_%d_%d.png" % tile_num, 'rb').read()
+
+            self.assertEquals(len(tile_data), len(on_disk))
+            self.assertEquals(str(tile_data), str(on_disk))
+
+        cursor.close()
+        conn.close()
+        os.remove(fn)
 
 if __name__ == '__main__':
     unittest.main()
