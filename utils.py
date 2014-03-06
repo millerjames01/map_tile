@@ -3,6 +3,36 @@ import os
 
 import settings
 
+# @param lat <Float>
+# @param lng <Float>
+# @param padding <Float> distance, in meters
+# @return pair of lat lng coordinates, specifying the NW and SE points
+#   [ (nw_lat, nw_lng), (se_lat, se_lng) ]
+
+def bounding_box_from_latlng(lat, lng, padding):
+    padding = float(padding)
+    lat_rad = math.radians(lat)
+    lng_rad = math.radians(lng)
+
+    radius = 6371 * 1000 # Of Earth, in meters
+
+    # Radius of the parallel at given latitude
+    parallel_radius = radius * math.cos(lat)
+
+    lat_min = lat_rad - padding / radius
+    lat_max = lat_rad + padding / radius
+    lng_min = lng_rad - padding / parallel_radius
+    lng_max = lng_rad + padding / parallel_radius
+
+    ne = (math.degrees(lat_max), math.degrees(lng_max))
+    sw = (math.degrees(lat_min), math.degrees(lng_min))
+
+    return [ne, sw]
+
+    # Approximation taken from
+    # http://stackoverflow.com/questions/1648917/given-a-latitude-and-longitude-and-distance-i-want-to-find-a-bounding-box
+
+
 def download_tiles(urls, target_dir='/tmp/tiles'):
     #write urls to file
     fn = '/tmp/tile_urls.txt'
