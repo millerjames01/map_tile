@@ -3,8 +3,28 @@ import utils
 
 class UtilTest(unittest.TestCase):
 
+    def setUp(self):
+      self.point = (41.312604, -72.929916)
+
+      # Verified using (WA says the diagonal distance is .1415 km, or sqrt(100m^2 + 100m^2))
+      # https://www.wolframalpha.com/input/?i=++++++distance+from+%2841.312604%2C+-72.929916%29+to+%2841.31350332160592%2C+-72.92871869079472%29&a=*C.distance-_*GeoQueryType-
+      self.northeast100 = (41.31350332160592, -72.92871869079472)
+
+      # https://www.wolframalpha.com/input/?i=++++++distance+from+%2841.312604%2C+-72.929916%29+to+%2841.31170467839408%2C+-72.93111330920529%29&a=*C.distance-_*GeoQueryType-
+      self.southwest100 = (41.31170467839408, -72.93111330920529)
+
+
+
+    def test_bounding_box_from_latlng_when_padding_is_zero(self):
+        ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 0 )
+        self.assertEqual(ret[0], self.point)
+        self.assertEqual(ret[1], self.point)
+
     def test_bounding_box_from_latlng(self):
-        return True
+        ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 100 )
+        self.assertEqual(ret[0], self.northeast100)
+        self.assertEqual(ret[1], self.southwest100)
+
         # utils.bounding_box(point, half-side) gives the proper coordinates
 
     def test_bounding_box_to_tiles(self):

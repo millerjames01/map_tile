@@ -17,7 +17,7 @@ def bounding_box_from_latlng(lat, lng, padding):
     radius = 6371 * 1000 # Of Earth, in meters
 
     # Radius of the parallel at given latitude
-    parallel_radius = radius * math.cos(lat)
+    parallel_radius = radius * math.cos(lat_rad)
 
     lat_min = lat_rad - padding / radius
     lat_max = lat_rad + padding / radius
