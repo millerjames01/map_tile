@@ -7,7 +7,7 @@ import settings
 # @param lng <Float>
 # @param padding <Float> distance, in meters
 # @return pair of lat lng coordinates, specifying the NW and SE points
-#   [ (nw_lat, nw_lng), (se_lat, se_lng) ]
+#   [ (ne_lat, ne_lng), (sw_lat, sw_lng) ]
 
 def bounding_box_from_latlng(lat, lng, padding):
     padding = float(padding)
@@ -29,9 +29,38 @@ def bounding_box_from_latlng(lat, lng, padding):
 
     return [ne, sw]
 
-    # Approximation taken from
-    # http://stackoverflow.com/questions/1648917/given-a-latitude-and-longitude-and-distance-i-want-to-find-a-bounding-box
+def bounding_box_to_tile_nums(ne, sw, zoom):
+    ne_x, ne_y = deg2num( ne[0], ne[1], zoom)
+    sw_x, sw_y = deg2num( sw[0], ne[1], zoom)
 
+    xmin = min(ne_x, sw_x)
+    xmax = max(ne_x, sw_x) + 1
+    ymin = min(ne_y, sw_y)
+    ymax = max(ne_y, sw_y)
+
+    print xmin, xmax + 1
+    print ymin, ymax + 1
+    print range(xmin, xmax + 1)
+    print range(ymin, ymax + 1)
+    for x in range(xmin, xmax + 1):
+      for y in range(ymin, ymax + 1):
+        print "%d %d" % (x, y)
+
+
+
+
+def coord2tile(coord, zoom):
+    return deg2num(coord[0], coord[1], zoom)
+
+def deg2num(lat_deg, lon_deg, zoom):
+  """
+  From http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Lon..2Flat._to_tile_numbers_2
+  """
+  lat_rad = math.radians(lat_deg)
+  n = 2.0 ** zoom
+  xtile = int((lon_deg + 180.0) / 360.0 * n)
+  ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
+  return (xtile, ytile)
 
 def download_tiles(urls, target_dir='/tmp/tiles'):
     #write urls to file
@@ -77,12 +106,3 @@ def num2url(zoom, x, y):
     """
     return 'http://api.tiles.mapbox.com/v3/%s/%s/%s/%s.png' % (settings.MAP_ID, zoom, x, y)
 
-def deg2num(lat_deg, lon_deg, zoom):
-  """
-  From http://wiki.openstreetmap.org/wiki/Slippy_map_tilenames#Lon..2Flat._to_tile_numbers_2
-  """
-  lat_rad = math.radians(lat_deg)
-  n = 2.0 ** zoom
-  xtile = int((lon_deg + 180.0) / 360.0 * n)
-  ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-  return (xtile, ytile)
