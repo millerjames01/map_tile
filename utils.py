@@ -8,7 +8,6 @@ import settings
 # @param padding <Float> distance, in meters
 # @return pair of lat lng coordinates, specifying the NW and SE points
 #   [ (ne_lat, ne_lng), (sw_lat, sw_lng) ]
-
 def bounding_box_from_latlng(lat, lng, padding):
     padding = float(padding)
     lat_rad = math.radians(lat)
@@ -29,26 +28,41 @@ def bounding_box_from_latlng(lat, lng, padding):
 
     return [ne, sw]
 
+# @param ne <LatLng tuple> the northeast corner of the region
+# @param sw <LatLng tuple> the southwest corner of the region
+# @param zoom <Integer> the desired zoom level used to compute the tiles
+# @return <List(xyz tuple)> list of tile number tuples at this zoom level
 def bounding_box_to_tile_nums(ne, sw, zoom):
-    ne_x, ne_y = deg2num( ne[0], ne[1], zoom)
-    sw_x, sw_y = deg2num( sw[0], ne[1], zoom)
-
+    ne_x, ne_y, zoom = coord2tile( ne, zoom)
+    sw_x, sw_y, zoom = coord2tile( sw, zoom)
     xmin = min(ne_x, sw_x)
-    xmax = max(ne_x, sw_x) + 1
+    xmax = max(ne_x, sw_x)
     ymin = min(ne_y, sw_y)
     ymax = max(ne_y, sw_y)
 
-    print xmin, xmax + 1
-    print ymin, ymax + 1
-    print range(xmin, xmax + 1)
-    print range(ymin, ymax + 1)
+    tile_nums = []
     for x in range(xmin, xmax + 1):
-      for y in range(ymin, ymax + 1):
-        print "%d %d" % (x, y)
+        for y in range(ymin, ymax + 1):
+            xyz = (x, y, zoom)
+            tile_nums.append(xyz)
 
+    return tile_nums
 
+# @param ne <LatLng tuple> the northeast corner of the region
+# @param sw <LatLng tuple> the southwest corner of the region
+# @param zmin <Integer> min desired zoom range, inclusive
+# @param zmax <Integer> max desired zoom range, inclusive
+# @return <List(xyz tuple)> list of tile number tuples at this zoom level
+#
+def bound_pyramid_to_tile_nums(ne, sw, zmin, zmax):
+    tile_nums = []
+    for z in range(zmin, zmax + 1):
+        tile_nums += bounding_box_to_tile_nums(ne, sw, z)
+    return tile_nums
 
-
+# @param coord <LatLng tuple>
+# @param zoom <Integer> the desired zoom level for the tile to return
+# @return <tile number tuple: (x, y, zoom)>
 def coord2tile(coord, zoom):
     return deg2num(coord[0], coord[1], zoom)
 
@@ -60,7 +74,7 @@ def deg2num(lat_deg, lon_deg, zoom):
   n = 2.0 ** zoom
   xtile = int((lon_deg + 180.0) / 360.0 * n)
   ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
-  return (xtile, ytile)
+  return (xtile, ytile, zoom)
 
 def download_tiles(urls, target_dir='/tmp/tiles'):
     #write urls to file
@@ -99,7 +113,7 @@ def pyramid4deg(lat_deg, lon_deg, zoom_limit=15, radius=2):
                 urls.append(num2url(zoom, x, y))
     return urls
 
-def num2url(zoom, x, y):
+def num2url(x, y, zoom):
     """
     Given a zoom, an x, and a y,
     return the url of that tile
