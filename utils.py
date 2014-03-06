@@ -55,37 +55,39 @@ def bounding_box_to_tile_nums(ne, sw, zoom):
 # @param zmin <Integer> min desired zoom range, inclusive
 # @param zmax <Integer> max desired zoom range, inclusive
 # @return <List(xyz tuple)> list of tile number tuples at this zoom level
-#
+
 def bound_pyramid_to_tile_nums(ne, sw, zmin, zmax):
     tile_nums = []
     for z in range(zmin, zmax + 1):
         tile_nums += bounding_box_to_tile_nums(ne, sw, z)
     return tile_nums
 
+# @param tile_nums <List(xyz tuple)> list of tile number tuples
+# @param fn <String> file name for the mbtiles sqlite3 db. File will be clobbered if it already
+#                    exists
 def tile_nums_to_sqlite3_db(tile_nums, fn="out.mbtiles"):
-    # clobber file first
+    # Create db, clobbering if already exists
     if os.path.isfile(fn):
         os.remove(fn)
     conn = sqlite3.connect(fn)
-
     conn.execute(
-        '''
-        CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob);
-        '''
+        "CREATE TABLE tiles (zoom_level integer, tile_column integer, tile_row integer, tile_data blob)"
         )
 
     for tile_num in tile_nums:
+        # Get tile_data, as string
         url =  num2url(*tile_num)
         tile_data = urllib2.urlopen(url).read()
+
+        # Insert the tile numbers + blob into db
+        # Note: need to convert tile data from string to binary blob
         conn.execute(
-            "INSERT INTO tiles VALUES (%d, %d, %d, ?)" % (tile_num[2], tile_num[0], tile_num[1]),
-            [sqlite3.Binary(tile_data)]
+            "INSERT INTO tiles VALUES (?, ?, ?, ?)",
+            [tile_num[2], tile_num[0], tile_num[1], sqlite3.Binary(tile_data)]
             )
 
     conn.commit()
     conn.close()
-
-
 
 # @param coord <LatLng tuple>
 # @param zoom <Integer> the desired zoom level for the tile to return
@@ -102,26 +104,6 @@ def deg2num(lat_deg, lon_deg, zoom):
   xtile = int((lon_deg + 180.0) / 360.0 * n)
   ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
   return (xtile, ytile, zoom)
-
-def download_tiles(urls, target_dir='/tmp/tiles'):
-    #write urls to file
-    fn = '/tmp/tile_urls.txt'
-    f = open(fn, 'w')
-    f.writelines(['%s\n' % u for u in urls])
-    f.close()
-
-    #prep target dir
-    if not os.path.exists(target_dir):
-        os.makedirs(target_dir)
-
-    #pull tiles down
-    cwd = os.getcwd()
-    os.chdir(target_dir)
-    os.system('wget --recursive --quiet --no-host-directories --cut-dirs 2 --input-file %s' % fn)
-    os.chdir(cwd)
-
-    #cleanup
-    #os.remove(fn)
 
 def num2url(x, y, zoom):
     """
