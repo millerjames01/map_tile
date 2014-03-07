@@ -91,7 +91,7 @@ class UtilTest(unittest.TestCase):
           'http://api.tiles.mapbox.com/v3/%s/5/6371/6759.png' % settings.MAP_ID
         )
 
-    def test_sqlite3(self):
+    def test_tile_nums_to_mbtiles(self):
         tile_nums = [(2, 2, 3),
             (4, 5, 4),
             (9, 11, 5)]
@@ -99,11 +99,11 @@ class UtilTest(unittest.TestCase):
         # TODO(syu): replace with random temp file naem
         fn = "test.mbtiles"
 
-        utils.tile_nums_to_sqlite3_db(tile_nums, fn)
+        utils.tile_nums_to_mbtiles(tile_nums, fn)
 
         conn = sqlite3.connect(fn)
         cursor = conn.cursor()
-        for tile_num in tile_nums[:]:
+        for tile_num in tile_nums:
             cursor.execute("SELECT * from tiles WHERE tile_column = %d AND tile_row = %d AND zoom_level = %d" % tile_num)
             tile_data = cursor.fetchone()[3]
 

@@ -5,6 +5,14 @@ import settings
 import sqlite3
 import urllib2
 
+# For the given lat/lng point, bound it by `padding` distance (in meters) in each
+# direction, and then, dump all tiles in zoom levels 3 to 17 that intersect
+# the bounding box into a .mbtiles file specified by `fn`
+def coord_to_mbtiles(lat, lng, padding, fn):
+    ne, sw = bounding_box_from_latlng(lat, lng, padding)
+    tile_nums = bound_pyramid_to_tile_nums(ne, sw, 3, 17)
+    tile_nums_to_mbtiles(tile_nums, fn)
+
 # @param lat <Float>
 # @param lng <Float>
 # @param padding <Float> distance, in meters
@@ -65,7 +73,7 @@ def bound_pyramid_to_tile_nums(ne, sw, zmin, zmax):
 # @param tile_nums <List(xyz tuple)> list of tile number tuples
 # @param fn <String> file name for the mbtiles sqlite3 db. File will be clobbered if it already
 #                    exists
-def tile_nums_to_sqlite3_db(tile_nums, fn="out.mbtiles"):
+def tile_nums_to_mbtiles(tile_nums, fn="out.mbtiles"):
     # Create db, clobbering if already exists
     if os.path.isfile(fn):
         os.remove(fn)
