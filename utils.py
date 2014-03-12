@@ -5,6 +5,9 @@ import settings
 import sqlite3
 import urllib2
 
+from shapely.wkt import loads
+import shapely.geometry
+
 # For the given lat/lng point, bound it by `padding` distance (in meters) in each
 # direction, and then, dump all tiles in zoom levels 3 to 17 that intersect
 # the bounding box into a .mbtiles file specified by `fn`
@@ -12,6 +15,25 @@ def coord_to_mbtiles(lat, lng, padding, fn):
     ne, sw = bounding_box_from_latlng(lat, lng, padding)
     tile_nums = bound_pyramid_to_tile_nums(ne, sw, 3, 17)
     tile_nums_to_mbtiles(tile_nums, fn)
+
+def wkt_to_bounding_boxes(wkt_string):
+    g = loads(wkt_string)
+    stands = []
+    if g.geom_type == "Polygon":
+      stands = [g]
+    elif g.geom_type == "MultiPolygon":
+      stands = g.geoms
+    def bounds_tuple_to_bounding_box_coords(bounds_tuple):
+        # tuple: (minx, miny, maxx, maxy)
+        lng_min, lat_min, lng_max, lat_max = bounds_tuple
+        return (lat_max, lng_max), (lat_min, lng_min)
+    bb_coords = [bounds_tuple_to_bounding_box_coords(g.bounds) for g in stands]
+    print bb_coords
+    return bb_coords
+
+def bb_coords_as_wkt(ne, sw):
+  return "POLYGON ((%f %f, %f %f, %f %f, %f %f))" % (ne[1], ne[0], ne[1], sw[0], sw[1], sw[0], sw[1], ne[0])
+
 
 # @param lat <Float>
 # @param lng <Float>
