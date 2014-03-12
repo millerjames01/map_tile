@@ -23,6 +23,7 @@ utils.wkt_to_mbtiles('polygon.wkt', 'sample.mbtiles', 3, 17)
 
 ## About polygon.wkt
 The included `polygon.wkt` file defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle. Notes included below:
+Polygon.wkt defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle.
 ```
 # lat	lng	description
 
