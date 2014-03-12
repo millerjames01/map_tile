@@ -21,10 +21,11 @@ The included `sample.mbtiles` is generated from `polygon.wkt` at zoom levels 3 t
 utils.wkt_to_mbtiles('polygon.wkt', 'sample.mbtiles', 3, 17)
 ```
 
-Polygon.wkt defines two polygons, one of Yale University campus, one of Yale 
+Polygon.wkt defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle.
 ```
+# lat	lng	description
+
 Yale campus
-lat	lng	description
 41.307331	-72.928795	chapel & college
 41.310361	-72.922573	grove & church/whitney
 41.319578	-72.918948	whitney and edwards
