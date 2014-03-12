@@ -45,6 +45,40 @@ class UtilTest(unittest.TestCase):
         self.assertEqual(sw[0], 18.466465)
         self.assertEqual(sw[1], -80.190262)
 
+    def test_multipolygon_wkt_to_bounding_boxes(self):
+        wkt_multipolygon_string = """
+                             MULTIPOLYGON (((-80.190262 25.774252,
+                             -66.118292 18.466465,
+                             -64.75737 32.321384,
+                             -80.190262 25.774252)),
+                             ((31.5 32,
+                               30 33.5,
+                               25 33,
+                               17 17,
+                               31.5 32)))
+                             """
+
+        bounding_boxes = utils.wkt_to_bounding_boxes(wkt_multipolygon_string)
+        self.assertEqual(len(bounding_boxes), 2)
+
+        # First bounding box, around the bermuda triangle
+        bb = bounding_boxes[0]
+        self.assertEqual(len(bb), 2)
+        ne, sw = bb
+        self.assertEqual(ne[0], 32.321384)
+        self.assertEqual(ne[1], -64.75737)
+        self.assertEqual(sw[0], 18.466465)
+        self.assertEqual(sw[1], -80.190262)
+
+        # Second bounding box, around the spiky quadirlateral
+        bb = bounding_boxes[1]
+        self.assertEqual(len(bb), 2)
+        ne, sw = bb
+        self.assertEqual(ne[0], 33.5)
+        self.assertEqual(ne[1], 31.5)
+        self.assertEqual(sw[0], 17)
+        self.assertEqual(sw[1], 17)
+
     def test_bounding_box_from_latlng_when_padding_is_zero(self):
         ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 0 )
         self.assertEqual(ret[0], self.point)
