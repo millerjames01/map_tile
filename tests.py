@@ -180,16 +180,6 @@ class UtilTest(unittest.TestCase):
         self.assertEqual(sw[0], 17)
         self.assertEqual(sw[1], 17)
 
-    def test_bounding_box_from_latlng_when_padding_is_zero(self):
-        ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 0 )
-        self.assertEqual(ret[0], self.point)
-        self.assertEqual(ret[1], self.point)
-
-    def test_bounding_box_from_latlng(self):
-        ret = utils.bounding_box_from_latlng( self.point[0], self.point[1], 100 )
-        self.assertEqual(ret[0], self.northeast100)
-        self.assertEqual(ret[1], self.southwest100)
-
     def test_bounding_box_to_tiles_at_zoom_17(self):
         tile_nums = utils.bounding_box_to_tile_nums( self.northeast100, self.southwest100, 17)
 

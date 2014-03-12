@@ -1,30 +1,35 @@
 import math
 import os
-
 import settings
 import sqlite3
 import urllib2
-
 from shapely.wkt import loads
 import shapely.geometry
 from operator import itemgetter
 
-# For the given lat/lng point, bound it by `padding` distance (in meters) in each
-# direction, and then, dump all tiles in zoom levels 3 to 17 that intersect
-# the bounding box into a .mbtiles file specified by `fn`
-def coord_to_mbtiles(lat, lng, padding, fn):
-    ne, sw = bounding_box_from_latlng(lat, lng, padding)
-    tile_nums = bound_pyramid_to_tile_nums(ne, sw, 3, 17)
-    tile_nums_to_mbtiles(tile_nums, fn)
-
 ##
-# @in_fn
+# Generates a mbtiles file containing all the tiles corresponding to the polygons
+# defined in the given WKT file at the desired zoom levels.
+#
+# @param in_fn [String] input wkt filename
+# @param out_fn [String] output mbtiles filename
+# @param zmin [Integer] min zoom level, inclusive
+# @param zmax [Integer] max zoom level, inclusive
 def wkt_to_mbtiles(in_fn="polygon.wkt", out_fn="out.mbtiles", zmin=3, zmax=17):
     wkt_string = open(in_fn, "rb").read()
     uniq_tile_nums = wkt_to_uniq_tile_nums(wkt_string, zmin, zmax)
     print uniq_tile_nums
     tile_nums_to_mbtiles(uniq_tile_nums, out_fn)
 
+##
+# Generates a list of tile numbers at the desired zoom levels, bound by the bounding-boxes of
+# the polygons specified in a WKT formatted string
+#
+# @param wkt_string [String] adheres to the WKT format
+# @param zmin [Integer] min zoom level, inclusive
+# @param zmax [Integer] max zoom level, inclusive
+# @return [Array<XYZ tuple>] a list of tile numbers, each represented by
+#   a tuple of (X,Y,Z) coordinates.
 def wkt_to_uniq_tile_nums(wkt_string, zmin, zmax):
     bounding_boxes = wkt_to_bounding_boxes(wkt_string)
     tile_nums = []
@@ -33,11 +38,20 @@ def wkt_to_uniq_tile_nums(wkt_string, zmin, zmax):
       ne, sw = bb
       tile_nums += bound_pyramid_to_tile_nums(ne, sw, zmin, zmax)
 
-    # Unique, and sort by z x y
+    # Force unique, and sort by z x y
     uniq_tile_nums = list(set(tile_nums))
     sorted_tile_nums = sorted(uniq_tile_nums, key=itemgetter(2, 0, 1))
     return sorted_tile_nums
 
+##
+# Generates a list of bonding boxes from the polygons given in a WKT string
+#
+# @param wkt_string [String] A string adhering to the WKT format. Currently supports Polygon and
+#   Multipolygon geometries
+# @return [Array<BoundingBox Tuple<LatLngTuple, LatLngTuple>>]
+#   a list of boundingboxes, one for each polygon in the wkt_string
+#   each bounding box is represented as a tuple of two lat lng tuples, each representing the
+#   northeast and southwest corners of the bounding box respectively.
 def wkt_to_bounding_boxes(wkt_string):
     g = loads(wkt_string)
     stands = []
@@ -52,35 +66,18 @@ def wkt_to_bounding_boxes(wkt_string):
     bb_coords = [bounds_tuple_to_bounding_box_coords(g.bounds) for g in stands]
     return bb_coords
 
+##
+# Utility function, converts a bounding box to a WKT polygon string
+#
+# @param ne [LatLng Tuple]
+# @param sw [LatLng Tuple]
+# @return [String] in WKT Polygon format.
 def bb_coords_as_wkt(ne, sw):
   return "POLYGON ((%f %f, %f %f, %f %f, %f %f))" % (ne[1], ne[0], ne[1], sw[0], sw[1], sw[0], sw[1], ne[0])
 
-
-# @param lat <Float>
-# @param lng <Float>
-# @param padding <Float> distance, in meters
-# @return pair of lat lng coordinates, specifying the NW and SE points
-#   [ (ne_lat, ne_lng), (sw_lat, sw_lng) ]
-def bounding_box_from_latlng(lat, lng, padding):
-    padding = float(padding)
-    lat_rad = math.radians(lat)
-    lng_rad = math.radians(lng)
-
-    radius = 6371 * 1000 # Of Earth, in meters
-
-    # Radius of the parallel at given latitude
-    parallel_radius = radius * math.cos(lat_rad)
-
-    lat_min = lat_rad - padding / radius
-    lat_max = lat_rad + padding / radius
-    lng_min = lng_rad - padding / parallel_radius
-    lng_max = lng_rad + padding / parallel_radius
-
-    ne = (math.degrees(lat_max), math.degrees(lng_max))
-    sw = (math.degrees(lat_min), math.degrees(lng_min))
-
-    return [ne, sw]
-
+##
+# Given the corners of a bounding box, returns list of covered tiles at the desired zoom level.
+#
 # @param ne <LatLng tuple> the northeast corner of the region
 # @param sw <LatLng tuple> the southwest corner of the region
 # @param zoom <Integer> the desired zoom level used to compute the tiles
@@ -101,18 +98,24 @@ def bounding_box_to_tile_nums(ne, sw, zoom):
 
     return tile_nums
 
+##
+# Given the corners of a bounding box, returns list of covered tiles at the desired zoom range
+#
 # @param ne <LatLng tuple> the northeast corner of the region
 # @param sw <LatLng tuple> the southwest corner of the region
 # @param zmin <Integer> min desired zoom range, inclusive
 # @param zmax <Integer> max desired zoom range, inclusive
 # @return <List(xyz tuple)> list of tile number tuples at this zoom level
-
 def bound_pyramid_to_tile_nums(ne, sw, zmin, zmax):
     tile_nums = []
     for z in range(zmin, zmax + 1):
         tile_nums += bounding_box_to_tile_nums(ne, sw, z)
     return tile_nums
 
+##
+# Given a list of tile numbers, fetches the corresponding tile images and creates a .mbtiles output
+# file
+#
 # @param tile_nums <List(xyz tuple)> list of tile number tuples
 # @param fn <String> file name for the mbtiles sqlite3 db. File will be clobbered if it already
 #                    exists
@@ -156,10 +159,11 @@ def deg2num(lat_deg, lon_deg, zoom):
   ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
   return (xtile, ytile, zoom)
 
+##
+# The map id is specified by an ENV var, and defaults to a public example map.
 def num2url(x, y, zoom):
     """
     Given a zoom, an x, and a y,
     return the url of that tile
     """
     return 'http://api.tiles.mapbox.com/v3/%s/%s/%s/%s.png' % (settings.MAP_ID, zoom, x, y)
-
