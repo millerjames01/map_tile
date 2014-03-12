@@ -1,4 +1,4 @@
-To run:
+## To run:
 
 ```
 % python
@@ -10,7 +10,7 @@ To run:
 684K    out.mbtiles
 ```
 
-Tests:
+## Tests:
 This writes files to the `test` directory (the temporary image files), which is NOT checked into the repo.
 ```
 % python tests.py
@@ -21,10 +21,12 @@ The included `sample.mbtiles` is generated from `polygon.wkt` at zoom levels 3 t
 utils.wkt_to_mbtiles('polygon.wkt', 'sample.mbtiles', 3, 17)
 ```
 
-Polygon.wkt defines two polygons, one of Yale University campus, one of Yale 
+## About polygon.wkt
+The included `polygon.wkt` file defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle. Notes included below:
 ```
+# lat	lng	description
+
 Yale campus
-lat	lng	description
 41.307331	-72.928795	chapel & college
 41.310361	-72.922573	grove & church/whitney
 41.319578	-72.918948	whitney and edwards
@@ -34,7 +36,7 @@ lat	lng	description
 41.308892	-72.933625	Chapel and Park
 41.307331	-72.928795	chapel & college (closing the polygon)
 
-Yale bowl		
+Yale bowl
 41.311312	-72.963514	sw corner
 41.310861	-72.95845	se corner
 41.314342	-72.959051	ne
