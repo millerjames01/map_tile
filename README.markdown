@@ -17,6 +17,8 @@ utils.wkt_to_mbtiles('polygon.wkt', 'sample.mbtiles', 3, 17)
 
 ## Tests:
 The tests writes files (temporary image files) to the `test` directory, which is NOT checked into the repo.
+We're re-downloading the images every test-run because it seems like there are tiny (<100B) differences in the image files returned by the server specified by the same tile numbers (over span of a couple days)
+
 
 To run tests:
 ```
@@ -26,7 +28,6 @@ To run tests:
 
 ## About polygon.wkt
 The included `polygon.wkt` file defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle. Notes included below:
-Polygon.wkt defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle.
 ```
 # lat	lng	description
 
