@@ -7,6 +7,7 @@ import urllib2
 
 from shapely.wkt import loads
 import shapely.geometry
+from operator import itemgetter
 
 # For the given lat/lng point, bound it by `padding` distance (in meters) in each
 # direction, and then, dump all tiles in zoom levels 3 to 17 that intersect
@@ -15,6 +16,27 @@ def coord_to_mbtiles(lat, lng, padding, fn):
     ne, sw = bounding_box_from_latlng(lat, lng, padding)
     tile_nums = bound_pyramid_to_tile_nums(ne, sw, 3, 17)
     tile_nums_to_mbtiles(tile_nums, fn)
+
+##
+# @in_fn
+def wkt_to_mbtiles(in_fn="polygon.wkt", out_fn="out.mbtiles", zmin=3, zmax=17):
+    wkt_string = open(in_fn, "rb").read()
+    uniq_tile_nums = wkt_to_uniq_tile_nums(wkt_string, zmin, zmax)
+    print uniq_tile_nums
+    tile_nums_to_mbtiles(uniq_tile_nums, out_fn)
+
+def wkt_to_uniq_tile_nums(wkt_string, zmin, zmax):
+    bounding_boxes = wkt_to_bounding_boxes(wkt_string)
+    tile_nums = []
+
+    for bb in bounding_boxes:
+      ne, sw = bb
+      tile_nums += bound_pyramid_to_tile_nums(ne, sw, zmin, zmax)
+
+    # Unique, and sort by z x y
+    uniq_tile_nums = list(set(tile_nums))
+    sorted_tile_nums = sorted(uniq_tile_nums, key=itemgetter(2, 0, 1))
+    return sorted_tile_nums
 
 def wkt_to_bounding_boxes(wkt_string):
     g = loads(wkt_string)
@@ -28,7 +50,6 @@ def wkt_to_bounding_boxes(wkt_string):
         lng_min, lat_min, lng_max, lat_max = bounds_tuple
         return (lat_max, lng_max), (lat_min, lng_min)
     bb_coords = [bounds_tuple_to_bounding_box_coords(g.bounds) for g in stands]
-    print bb_coords
     return bb_coords
 
 def bb_coords_as_wkt(ne, sw):
