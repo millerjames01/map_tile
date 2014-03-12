@@ -10,16 +10,19 @@
 684K    out.mbtiles
 ```
 
-## Tests:
-This writes files to the `test` directory (the temporary image files), which is NOT checked into the repo.
-```
-% python tests.py
-```
-
 The included `sample.mbtiles` is generated from `polygon.wkt` at zoom levels 3 to 17, with the following command:
 ```
 utils.wkt_to_mbtiles('polygon.wkt', 'sample.mbtiles', 3, 17)
 ```
+
+## Tests:
+The tests writes files (temporary image files) to the `test` directory, which is NOT checked into the repo.
+
+To run tests:
+```
+% python tests.py
+```
+
 
 ## About polygon.wkt
 The included `polygon.wkt` file defines two polygons, one of Yale University campus, one of the Yale Bowl quadrangle. Notes included below:
